@@ -1,16 +1,7 @@
-# Recuperación v4.0 — Corrección GitHub Pages
+# Recuperación v5
 
-Esta versión evita la pantalla blanca causada por una cadena de build innecesaria: es una PWA estática, sin dependencia de Node/Vite para mostrar la interfaz.
+Nueva versión con resumen diario, hábitos editables, compromisos personales, pensamientos/situaciones de riesgo, estado de consumo, kit de emergencias, carta del ánimo, horario y análisis mensual.
 
-Incluye:
-- Carta del ánimo diaria con la estructura de la imagen y checklists.
-- Vista mensual con días 1–31.
-- Medicamentos configurables y registro diario de tomas.
-- Horario editable.
-- Recordatorio y solicitud de notificaciones.
-- Persistencia local en el teléfono.
-- Service worker.
-- GitHub Pages mediante publicación directa del contenido del repositorio.
+La interfaz es estática y está preparada para GitHub Pages. Los datos se guardan localmente para que la aplicación funcione sin una configuración adicional. `supabase_v5.sql` crea las tablas nuevas para sincronización posterior.
 
-IMPORTANTE:
-Para usar Supabase con autenticación/sincronización hay que conectar las credenciales y sesión del proyecto existente. Esta versión prioriza que la aplicación cargue correctamente en GitHub Pages y no quede en blanco.
+Para GitHub Pages, subir el contenido de esta carpeta a la raíz del repositorio `P-Renault/Recuperacion`.

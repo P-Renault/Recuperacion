@@ -1,163 +1,34 @@
-(() => {
-'use strict';
-
-const KEY='recuperacion-v4';
-const today=()=>new Date().toLocaleDateString('en-CA');
-const read=(k,d)=>{try{return JSON.parse(localStorage.getItem(KEY+':'+k)||JSON.stringify(d))}catch{return d}};
-const write=(k,v)=>localStorage.setItem(KEY+':'+k,JSON.stringify(v));
-const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
-const levels=['Sin registro','Leve','Moderado','Marcado','Severo'];
-let tab=localStorage.getItem(KEY+':tab')||'mood';
-let moods=read('moods',[]);
-let meds=read('meds',[]);
-let logs=read('logs',[]);
-let routines=read('routines',[
- {id:crypto.randomUUID(),time:'06:00',title:'Levantarse',notes:''},
- {id:crypto.randomUUID(),time:'06:15',title:'Higiene personal',notes:''},
- {id:crypto.randomUUID(),time:'06:30',title:'Desayuno',notes:''},
- {id:crypto.randomUUID(),time:'07:00',title:'Planificar el día',notes:''},
- {id:crypto.randomUUID(),time:'13:00',title:'Almuerzo',notes:''},
- {id:crypto.randomUUID(),time:'18:00',title:'Actividad física',notes:''},
- {id:crypto.randomUUID(),time:'21:00',title:'Completar ficha del ánimo',notes:''},
- {id:crypto.randomUUID(),time:'23:00',title:'Dormir',notes:''}
-]);
-let reminder=localStorage.getItem(KEY+':reminder')||'21:00';
-
-function blankMood(date=today()){return {
- date,sleep:'',exercise:'',
- racing:'',anguish:'',irritability:'',elevated:'',low:'',
- menstrual:'',psychosis:'',substances:'',notes:''
-}}
-function getMood(date=today()){return moods.find(x=>x.date===date)||blankMood(date)}
-function complete(m){return [m.sleep,m.exercise,m.racing,m.anguish,m.irritability,m.elevated,m.low,m.menstrual,m.psychosis,m.substances,m.notes].some(Boolean)}
-function mark(v){return v&&v!=='Sin registro'?'✓':'·'}
-
-function layout(content){
- document.getElementById('app').innerHTML=`
- <header class="top">
-   <div><small>RECUPERACIÓN Y RUTINA PERSONAL</small><h1>Mi día</h1></div>
-   <button class="primary" data-action="mood">Completar mi ficha del ánimo</button>
- </header>
- <section class="hero">
-   <div><span>● ${complete(getMood())?'FICHA DE HOY REGISTRADA':'FICHA DE HOY PENDIENTE'}</span>
-   <h2>Un día a la vez.</h2><p>Registra, observa y compara tu evolución.</p></div>
-   <div class="score">${[getMood().racing,getMood().anguish,getMood().irritability,getMood().elevated,getMood().low].filter(Boolean).length}<small>indicadores</small></div>
- </section>
- <nav>
-   <button class="${tab==='mood'?'active':''}" data-action="mood">Carta del ánimo</button>
-   <button class="${tab==='analysis'?'active':''}" data-action="analysis">Análisis mensual</button>
-   <button class="${tab==='routine'?'active':''}" data-action="routine">Horario diario</button>
- </nav>
- <main>${content}</main>`;
- document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>{tab=b.dataset.action;localStorage.setItem(KEY+':tab',tab);render()});
-}
-
-function choices(name,value,items=levels){
- return `<div class="choices">${items.map(x=>`<label class="${value===x?'selected':''}"><input type="radio" name="${name}" value="${esc(x)}" ${value===x?'checked':''}>${esc(x)}</label>`).join('')}</div>`;
-}
-function binary(name,value){return choices(name,value,['Sí','No','Sin registro'])}
-
-function moodView(){
- const m=getMood();
- const med=meds.map(x=>{
-   const l=logs.find(z=>z.medId===x.id&&z.date===m.date)||{};
-   return `<div class="medrow"><div><b>${esc(x.name)}</b><small>Dosis diaria: ${esc(x.dose||'—')} · ${x.times} toma(s)</small></div>
-   <label class="take"><input type="checkbox" data-med="${x.id}" ${l.taken?'checked':''}> Tomado</label>
-   <input class="mini" type="number" min="0" max="20" data-doses="${x.id}" value="${l.doses??0}" aria-label="Tomas realizadas"></div>`;
- }).join('');
- return `<section class="card">
- <div class="head"><div><small>CARTA DEL ÁNIMO · REGISTRO DIARIO</small><h2>Completar mi ficha del ánimo</h2></div>
- <label>Fecha<input id="moodDate" type="date" value="${esc(m.date)}"></label></div>
-
- <div class="cardnote">Completa esta ficha una vez al día. La vista mensual se genera automáticamente a partir de estos registros.</div>
-
- <div class="strip"><b>MEDICAMENTOS</b><span>Dosis diaria</span><span>N.º de veces / tomas</span></div>
- <div class="meds">${med||'<p class="muted">No hay medicamentos configurados.</p>'}</div>
- <button class="secondary" data-action2="addMed">+ Agregar medicamento</button>
-
- <div class="grid2">
-   <label><b>HORAS TOTALES DE SUEÑO</b><input id="sleep" type="number" min="0" max="24" step=".5" value="${esc(m.sleep)}"></label>
-   <label><b>EJERCICIO</b><input id="exercise" type="number" min="0" max="600" value="${esc(m.exercise)}" placeholder="minutos"></label>
- </div>
-
- <div class="row"><b>PENSAMIENTO ACELERADO</b>${choices('racing',m.racing)}</div>
- <div class="row"><b>ANGUSTIA / DESESPERACIÓN</b>${choices('anguish',m.anguish)}</div>
-
- <div class="band orange">IRRITABILIDAD</div>
- <div class="row"><b>Nivel</b>${choices('irritability',m.irritability)}</div>
-
- <div class="band yellow">ÁNIMO ELEVADO</div>
- <div class="row"><b>Nivel</b>${choices('elevated',m.elevated)}</div>
- <div class="stable">ESTABLE <span>○</span></div>
-
- <div class="band orange">ÁNIMO BAJO</div>
- <div class="row"><b>Nivel</b>${choices('low',m.low)}</div>
-
- <div class="row"><b>PERÍODO MENSTRUAL</b>${binary('menstrual',m.menstrual)}</div>
- <div class="row"><b>PSICOSIS</b>${binary('psychosis',m.psychosis)}</div>
- <div class="row"><b>ALCOHOL / MARIHUANA</b>${binary('substances',m.substances)}</div>
-
- <label class="notes"><b>OBSERVACIONES</b><textarea id="notes">${esc(m.notes)}</textarea></label>
- <div class="actions"><button class="primary" data-action2="saveMood">Guardar ficha del día</button></div>
- </section>`;
-}
-
-function analysisView(){
- const now=new Date(), y=now.getFullYear(), month=now.getMonth()+1, days=new Date(y,month,0).getDate();
- const prefix=`${y}-${String(month).padStart(2,'0')}-`;
- const data=day=>moods.find(x=>x.date===`${prefix}${String(day).padStart(2,'0')}`);
- const row=(label,key)=>`<tr><th>${label}</th>${Array.from({length:31},(_,i)=>i+1>days?'<td class="off">—</td>':`<td>${mark(data(i+1)?.[key])}</td>`).join('')}</tr>`;
- return `<section class="card"><div class="head"><div><small>CARTA DEL ÁNIMO · ANÁLISIS MENSUAL</small><h2>${now.toLocaleDateString('es-CL',{month:'long',year:'numeric'})}</h2></div>
- <span class="badge">${moods.filter(x=>x.date.startsWith(prefix)).length} días</span></div>
- <p class="muted">La planilla mensual es exclusivamente para observar comparación y evolución. Cada columna representa un día.</p>
- <div class="tablewrap"><table><thead><tr><th>DÍAS DEL MES</th>${Array.from({length:31},(_,i)=>`<th>${i+1}</th>`).join('')}</tr></thead><tbody>
- ${row('HORAS TOTALES DE SUEÑO','sleep')}${row('EJERCICIO','exercise')}${row('PENSAMIENTO ACELERADO','racing')}${row('ANGUSTIA / DESESPERACIÓN','anguish')}
- <tr class="section"><th>IRRITABILIDAD</th>${Array.from({length:31},(_,i)=>i+1>days?'<td class="off">—</td>':`<td>${mark(data(i+1)?.irritability)}</td>`).join('')}</tr>
- ${row('ÁNIMO ELEVADO','elevated')}<tr class="stableRow"><th>ESTABLE</th>${Array.from({length:31},(_,i)=>i+1>days?'<td class="off">—</td>':'<td>○</td>').join('')}</tr>
- ${row('ÁNIMO BAJO','low')}${row('PERÍODO MENSTRUAL','menstrual')}${row('PSICOSIS','psychosis')}${row('ALCOHOL / MARIHUANA','substances')}
- </tbody></table></div></section>`;
-}
-
-function routineView(){
- const rs=routines.slice().sort((a,b)=>a.time.localeCompare(b.time));
- return `<section class="card"><div class="head"><div><small>HORARIO DIARIO</small><h2>Mis rutinas</h2></div><button class="primary" data-action2="addRoutine">+ Agregar actividad</button></div>
- <div class="routine">${rs.map(r=>`<div class="routineitem"><time>${esc(r.time)}</time><span><b>${esc(r.title)}</b><small>${esc(r.notes)}</small></span>
- <button data-edit="${r.id}">Editar</button><button class="danger" data-del="${r.id}">Eliminar</button></div>`).join('')}</div>
- <hr><div class="head"><h3>Recordatorio diario de la ficha</h3></div>
- <div class="rem"><input id="reminder" type="time" value="${esc(reminder)}"><button data-action2="saveReminder">Guardar hora</button><button data-action2="notify">Activar notificaciones</button></div>
- <p class="muted">El navegador debe tener permiso de notificaciones. Una PWA en GitHub Pages no puede garantizar una alarma si Android detiene completamente el navegador.</p>
- </section>`;
-}
-
-function modal(html){document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="modal"><div class="modalbox">${html}</div></div>`)}
-
-function bindSecondary(){
- document.querySelectorAll('[data-action2]').forEach(b=>b.onclick=()=>actions(b.dataset.action2));
- document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>editRoutine(b.dataset.edit));
- document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>delRoutine(b.dataset.del));
- document.querySelectorAll('input[type=radio]').forEach(x=>x.onchange=()=>x.parentElement.parentElement.querySelectorAll('label').forEach(l=>l.classList.toggle('selected',l.querySelector('input')?.checked)));
-}
-function actions(a){
- if(a==='saveMood')saveMood(); if(a==='addMed')addMed(); if(a==='addRoutine')editRoutine();
- if(a==='saveReminder')saveReminder(); if(a==='notify')notify();
-}
-function saveMood(){
- const date=document.getElementById('moodDate').value||today(), m=getMood(date);
- m.date=date;m.sleep=document.getElementById('sleep').value;m.exercise=document.getElementById('exercise').value;m.notes=document.getElementById('notes').value;
- ['racing','anguish','irritability','elevated','low','menstrual','psychosis','substances'].forEach(k=>{const x=document.querySelector(`input[name="${k}"]:checked`);m[k]=x?x.value:''});
- const i=moods.findIndex(x=>x.date===date);if(i>=0)moods[i]=m;else moods.push(m);write('moods',moods);
- document.querySelectorAll('[data-med]').forEach(x=>{const medId=x.dataset.med;const d=document.querySelector(`[data-doses="${medId}"]`)?.value||0;logs=logs.filter(z=>!(z.medId===medId&&z.date===date));logs.push({medId,date,taken:x.checked,doses:Number(d)});});write('logs',logs);
- alert('Ficha del ánimo guardada correctamente.');render();
-}
-function addMed(){modal(`<h2>Agregar medicamento</h2><label>Medicamento<input id="mn"></label><label>Dosis diaria<input id="md" placeholder="Escribe la dosis indicada"></label><label>N.º de veces / tomas al día<input id="mt" type="number" min="1" value="1"></label><div class="actions"><button class="primary" id="ok">Guardar</button><button onclick="document.getElementById('modal').remove()">Cancelar</button></div>`);document.getElementById('ok').onclick=()=>{const name=document.getElementById('mn').value.trim();if(!name)return alert('Escribe el nombre del medicamento.');meds.push({id:crypto.randomUUID(),name,dose:document.getElementById('md').value.trim(),times:Number(document.getElementById('mt').value)||1});write('meds',meds);document.getElementById('modal').remove();render()}}
-function editRoutine(id){
- const r=routines.find(x=>x.id===id)||{id:'',time:'08:00',title:'',notes:''};
- modal(`<h2>${id?'Editar':'Agregar'} actividad</h2><label>Hora<input id="rt" type="time" value="${esc(r.time)}"></label><label>Actividad<input id="rtitle" value="${esc(r.title)}"></label><label>Notas<input id="rnotes" value="${esc(r.notes)}"></label><div class="actions"><button class="primary" id="rok">Guardar</button><button onclick="document.getElementById('modal').remove()">Cancelar</button></div>`);
- document.getElementById('rok').onclick=()=>{const n={id:id||crypto.randomUUID(),time:document.getElementById('rt').value,title:document.getElementById('rtitle').value.trim(),notes:document.getElementById('rnotes').value.trim()};if(!n.title)return alert('Escribe una actividad.');const i=routines.findIndex(x=>x.id===id);if(i>=0)routines[i]=n;else routines.push(n);write('routines',routines);document.getElementById('modal').remove();render()}
-}
-function delRoutine(id){if(confirm('¿Eliminar esta actividad?')){routines=routines.filter(x=>x.id!==id);write('routines',routines);render()}}
-function saveReminder(){reminder=document.getElementById('reminder').value||'21:00';localStorage.setItem(KEY+':reminder',reminder);alert('Recordatorio guardado para las '+reminder+'.')}
-async function notify(){if(!('Notification'in window))return alert('Este navegador no admite notificaciones.');const p=await Notification.requestPermission();if(p==='granted'){new Notification('Recuperación',{body:'Notificaciones activadas. Recuerda completar tu ficha del ánimo cada día.'});}else alert('Permite las notificaciones en el navegador.')}
-function render(){let c=tab==='analysis'?analysisView():tab==='routine'?routineView():moodView();layout(c);bindSecondary()}
-window.addEventListener('load',()=>{if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});render()});
+(()=>{"use strict";
+const K="recuperacion-v5:",D=()=>new Date().toLocaleDateString("en-CA"),R=(k,d)=>{try{return JSON.parse(localStorage.getItem(K+k)||JSON.stringify(d))}catch{return d}},W=(k,v)=>localStorage.setItem(K+k,JSON.stringify(v)),E=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+let tab=localStorage.getItem(K+"tab")||"home",moods=R("moods",[]),habits=R("habits",[{id:crypto.randomUUID(),name:"Beber agua",unit:"ml",target:2000},{id:crypto.randomUUID(),name:"Ejercicio",unit:"minutos",target:30},{id:crypto.randomUUID(),name:"Leer / estudiar",unit:"minutos",target:30}]),hlogs=R("hlogs",[]),commit=R("commit",[]),risks=R("risks",[]),routine=R("routine",[{id:crypto.randomUUID(),time:"06:00",title:"Levantarse",notes:""},{id:crypto.randomUUID(),time:"06:30",title:"Desayuno",notes:""},{id:crypto.randomUUID(),time:"07:00",title:"Planificar el día",notes:""},{id:crypto.randomUUID(),time:"18:00",title:"Actividad física",notes:""},{id:crypto.randomUUID(),time:"21:00",title:"Completar ficha del ánimo",notes:""},{id:crypto.randomUUID(),time:"23:00",title:"Dormir",notes:""}]),emergency=R("emergency",[
+{id:crypto.randomUUID(),t:"1. Detenerme",c:"Alejarme de la situación de riesgo y no tomar decisiones impulsivas."},
+{id:crypto.randomUUID(),t:"2. Alejarme del consumo",c:"Salir de lugares o situaciones asociadas al consumo. No conducir si estoy alterado o bajo efectos."},
+{id:crypto.randomUUID(),t:"3. Contactar apoyo",c:"Llamar a una persona de confianza y decir claramente que necesito compañía."},
+{id:crypto.randomUUID(),t:"4. Buscar ayuda",c:"Contactar a un profesional o acudir a un servicio de urgencias si el riesgo no disminuye."},
+{id:crypto.randomUUID(),t:"5. Emergencia inmediata",c:"Si existe peligro inmediato, no quedarse solo y contactar al servicio de emergencias de la localidad."}]);
+let reminder=localStorage.getItem(K+"reminder")||"21:00";
+const mood=d=>moods.find(x=>x.date===d)||{date:d}, done=m=>["sleep","exercise","racing","anguish","irritability","elevated","low","menstrual","psychosis","substances","notes"].some(k=>m[k]);
+function nav(){return `<nav>${["home:Resumen de hoy","mood:Carta del ánimo","habits:Hábitos","routine:Horario","commitments:Compromisos","risk:Pensamientos y riesgos","emergency:Kit de emergencia","analysis:Análisis mensual"].map(x=>{let[a,b]=x.split(":");return `<button class="${tab==a?"active":""}" data-tab="${a}">${b}</button>`}).join("")}</nav>`}
+function shell(c){let m=mood(D());document.getElementById("app").innerHTML=`<header class="top"><div><small>RECUPERACIÓN Y RUTINA PERSONAL</small><h1>Mi día</h1></div><button class="primary" data-tab="mood">Completar mi ficha del ánimo</button></header><section class="hero"><div><span>● ${done(m)?"REGISTRADO":"PENDIENTE"}</span><h2>Un día a la vez.</h2><p>${new Date().toLocaleDateString("es-CL",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</p></div><div class="score">${hlogs.filter(x=>x.date===D()&&x.done).length}<small>hábitos hechos</small></div></section>${nav()}<main>${c}</main>`;document.querySelectorAll("[data-tab]").forEach(x=>x.onclick=()=>{tab=x.dataset.tab;W("tab",tab);render()});bind()}
+function choices(n,v,a=["Sin registro","Leve","Moderado","Marcado","Severo"]){return `<div class="choices">${a.map(x=>`<label class="${v==x?"selected":""}"><input type="radio" name="${n}" value="${E(x)}" ${v==x?"checked":""}>${E(x)}</label>`).join("")}</div>`}
+function moodView(){let m=mood(D());return `<section class="card"><div class="head"><div><small>CARTA DEL ÁNIMO · REGISTRO DIARIO</small><h2>Completar mi ficha del ánimo</h2></div><label>Fecha<input id="md" type="date" value="${E(m.date)}"></label></div><div class="grid2"><label><b>HORAS TOTALES DE SUEÑO</b><input id="sleep" type="number" min="0" max="24" step=".5" value="${E(m.sleep)}"></label><label><b>EJERCICIO</b><input id="exercise" type="number" min="0" value="${E(m.exercise)}"></label></div>
+<div class="row"><b>PENSAMIENTO ACELERADO</b>${choices("racing",m.racing)}</div><div class="row"><b>ANGUSTIA / DESESPERACIÓN</b>${choices("anguish",m.anguish)}</div><div class="band orange">IRRITABILIDAD</div><div class="row"><b>Nivel</b>${choices("irritability",m.irritability)}</div><div class="band yellow">ÁNIMO ELEVADO</div><div class="row"><b>Nivel</b>${choices("elevated",m.elevated)}</div><div class="stable">ESTABLE <span>○</span></div><div class="band orange">ÁNIMO BAJO</div><div class="row"><b>Nivel</b>${choices("low",m.low)}</div><div class="row"><b>PERÍODO MENSTRUAL</b>${choices("menstrual",m.menstrual,["Sí","No","Sin registro"])}</div><div class="row"><b>PSICOSIS</b>${choices("psychosis",m.psychosis,["Sí","No","Sin registro"])}</div><div class="row"><b>ALCOHOL / MARIHUANA</b>${choices("substances",m.substances,["Sí","No","Sin registro"])}</div><label class="notes"><b>OBSERVACIONES</b><textarea id="notes">${E(m.notes)}</textarea></label><button class="primary" data-act="saveMood">Guardar ficha del día</button></section>`}
+function habitsView(){let rows=habits.map(h=>{let l=hlogs.find(x=>x.hid==h.id&&x.date==D())||{};return `<div class="habitrow"><div><b>${E(h.name)}</b><small>Meta: ${E(h.target)} ${E(h.unit)}</small></div><input type="number" min="0" step=".1" data-hv="${h.id}" value="${E(l.value||0)}"><label><input type="checkbox" data-hd="${h.id}" ${l.done?"checked":""}> Hecho</label><button data-he="${h.id}">Editar</button><button class="danger" data-hx="${h.id}">Eliminar</button></div>`}).join("");return `<section class="card"><div class="head"><div><small>HÁBITOS</small><h2>Hábitos diarios</h2></div><button class="primary" data-act="addHabit">+ Crear hábito</button></div><p class="muted">Define hábitos editables y registra la cantidad realizada cada día: agua en ml, ejercicio en minutos/tipo, lectura o estudio en minutos, etc.</p>${rows}<button class="primary" data-act="saveHabits">Guardar hábitos de hoy</button></section>`}
+function routineView(){return `<section class="card"><div class="head"><h2>Horario diario</h2><button class="primary" data-act="addRoutine">+ Agregar actividad</button></div>${routine.slice().sort((a,b)=>a.time.localeCompare(b.time)).map(r=>`<div class="routineitem"><time>${E(r.time)}</time><span><b>${E(r.title)}</b><small>${E(r.notes)}</small></span><button data-re="${r.id}">Editar</button><button class="danger" data-rx="${r.id}">Eliminar</button></div>`).join("")}<hr><h3>Recordatorio de la ficha</h3><div class="rem"><input id="rem" type="time" value="${E(reminder)}"><button data-act="saveReminder">Guardar</button><button data-act="notify">Activar notificaciones</button></div></section>`}
+function commitmentsView(){return `<section class="card"><div class="head"><h2>Compromisos personales</h2><button class="primary" data-act="addCommit">+ Agregar</button></div><p class="muted">Citas médicas, retiro de medicamentos, trámites, pagos, llamadas y otros compromisos.</p>${commit.slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)).map(c=>`<div class="commit"><div><b>${E(c.date)} ${E(c.time)}</b><strong>${E(c.title)}</strong><small>${E(c.category)}${c.location?" · "+E(c.location):""}${c.notes?" · "+E(c.notes):""}</small></div><label><input type="checkbox" data-cdone="${c.id}" ${c.done?"checked":""}> ${c.done?"Completado":"Pendiente"}</label><button data-ce="${c.id}">Editar</button><button class="danger" data-cx="${c.id}">Eliminar</button></div>`).join("")||"<p class='muted'>No hay compromisos.</p>"}</section>`}
+function riskView(){return `<section class="card"><div class="head"><h2>Pensamientos y situaciones de riesgo</h2><button class="primary" data-act="addRisk">+ Registrar</button></div><div class="safety"><b>Registro:</b> pensamiento → situación → disparador → intensidad → cómo la enfrenté → consumo.</div>${risks.slice().reverse().map(r=>`<div class="riskcard"><div><b>${E(r.date)}</b><strong>${E(r.situation||"Situación")}</strong><small>Pensamiento: ${E(r.thought||"—")}</small><small>Disparador: ${E(r.trigger||"—")}</small><small>Cómo la enfrenté: ${E(r.response||"—")}</small></div><span>Intensidad ${r.intensity}/10<br><b>${E(r.consumption)}</b></span><button data-riske="${r.id}">Editar</button><button class="danger" data-riskx="${r.id}">Eliminar</button></div>`).join("")||"<p class='muted'>No hay situaciones registradas.</p>"}</section>`}
+function emergencyView(){return `<section class="card emergency"><div class="head"><h2>Kit de emergencias</h2><button class="secondary" data-act="addEmergency">+ Agregar recurso</button></div><div class="alert"><b>Si existe peligro inmediato:</b> prioriza la seguridad, no te quedes solo, aléjate de la situación peligrosa y contacta a una persona de confianza o a un servicio de urgencias/emergencias.</div>${emergency.map(e=>`<div class="emrow"><div><b>${E(e.t)}</b><p>${E(e.c)}</p></div><button data-ee="${e.id}">Editar</button></div>`).join("")}</section>`}
+function analysisView(){let now=new Date(),y=now.getFullYear(),mo=now.getMonth()+1,days=new Date(y,mo,0).getDate(),p=`${y}-${String(mo).padStart(2,"0")}-`,d=n=>moods.find(x=>x.date==`${p}${String(n).padStart(2,"0")}`),row=(l,k)=>`<tr><th>${l}</th>${Array.from({length:31},(_,i)=>i+1>days?"<td class='off'>—</td>":`<td>${d(i+1)?.[k]?"✓":"·"}</td>`).join("")}</tr>`,hr=habits.map(h=>`<tr><th>Hábito: ${E(h.name)}</th>${Array.from({length:31},(_,i)=>{let l=hlogs.find(x=>x.hid==h.id&&x.date==`${p}${String(i+1).padStart(2,"0")}`);return i+1>days?"<td class='off'>—</td>":`<td>${l?.done?"✓":""}${l?.value?`<small>${E(l.value)}</small>`:""}</td>`}).join("")}</tr>`).join("");return `<section class="card"><h2>Análisis mensual</h2><p class="muted">Días 1–31 para comparar la evolución de la carta del ánimo y los hábitos.</p><div class="tablewrap"><table><thead><tr><th>INDICADOR</th>${Array.from({length:31},(_,i)=>`<th>${i+1}</th>`).join("")}</tr></thead><tbody>${row("Sueño","sleep")}${row("Ejercicio","exercise")}${row("Pensamiento acelerado","racing")}${row("Angustia / desesperación","anguish")}${row("Irritabilidad","irritability")}${row("Ánimo elevado","elevated")}${row("Ánimo bajo","low")}${row("Psicosis","psychosis")}${row("Alcohol / marihuana","substances")}${hr}</tbody></table></div></section>`}
+function home(){let m=mood(D()),hs=habits.map(h=>{let l=hlogs.find(x=>x.hid==h.id&&x.date==D());return `<div class="summaryitem"><b>${E(h.name)}</b><span>${l?.done?"✓ ":""}${E(l?.value||0)} ${E(h.unit)}</span></div>`}).join(""),cs=commit.filter(x=>x.date==D()).map(c=>`<div class="summaryitem"><b>${E(c.time||"—")} · ${E(c.title)}</b><span>${c.done?"✓ Completado":"Pendiente"}</span></div>`).join("");return `<section class="card"><div class="head"><h2>Resumen de hoy</h2><span class="badge">${done(m)?"Carta registrada":"Carta pendiente"}</span></div><div class="dashboard"><div><h3>Carta del ánimo</h3><p>Sueño: <b>${E(m.sleep||"—")}</b> h · Ejercicio: <b>${E(m.exercise||"—")}</b> min</p><p>Irritabilidad: <b>${E(m.irritability||"Sin registro")}</b> · Ánimo bajo: <b>${E(m.low||"Sin registro")}</b></p></div><div><h3>Hábitos ejecutados</h3>${hs}</div><div><h3>Compromisos de hoy</h3>${cs||"<p class='muted'>Sin compromisos.</p>"}</div><div><h3>Horario</h3>${routine.slice().sort((a,b)=>a.time.localeCompare(b.time)).map(r=>`<div class="summaryitem"><b>${E(r.time)} · ${E(r.title)}</b></div>`).join("")}</div></div></section>`}
+function modal(x){document.body.insertAdjacentHTML("beforeend",`<div class="modal" id="modal"><div class="modalbox">${x}</div></div>`)}function close(){document.getElementById("modal")?.remove()}
+function addHabit(id){let h=habits.find(x=>x.id==id)||{};modal(`<h2>${id?"Editar":"Crear"} hábito</h2><label>Nombre<input id="hn" value="${E(h.name)}"></label><label>Unidad<input id="hu" value="${E(h.unit||"minutos")}"></label><label>Meta diaria<input id="ht" type="number" value="${E(h.target||0)}"></label><div class="actions"><button class="primary" id="ok">Guardar</button><button onclick="close()">Cancelar</button></div>`);document.getElementById("ok").onclick=()=>{let n={id:id||crypto.randomUUID(),name:hn.value.trim(),unit:hu.value.trim()||"veces",target:Number(ht.value)||0};if(!n.name)return alert("Escribe el nombre.");let i=habits.findIndex(x=>x.id==id);i<0?habits.push(n):habits[i]=n;W("habits",habits);close();render()}}
+function addCommit(id){let c=commit.find(x=>x.id==id)||{date:D(),time:"",title:"",category:"Personal",location:"",notes:"",done:false};modal(`<h2>${id?"Editar":"Nuevo"} compromiso</h2><label>Fecha<input id="cd" type="date" value="${E(c.date)}"></label><label>Hora<input id="ct" type="time" value="${E(c.time)}"></label><label>Compromiso<input id="cn" value="${E(c.title)}"></label><label>Categoría<input id="cc" value="${E(c.category)}"></label><label>Lugar<input id="cl" value="${E(c.location)}"></label><label>Notas<input id="co" value="${E(c.notes)}"></label><div class="actions"><button class="primary" id="ok">Guardar</button><button onclick="close()">Cancelar</button></div>`);document.getElementById("ok").onclick=()=>{let n={id:id||crypto.randomUUID(),date:cd.value,time:ct.value,title:cn.value.trim(),category:cc.value.trim()||"Personal",location:cl.value.trim(),notes:co.value.trim(),done:c.done};if(!n.title)return alert("Escribe el compromiso.");let i=commit.findIndex(x=>x.id==id);i<0?commit.push(n):commit[i]=n;W("commit",commit);close();render()}}
+function addRisk(id){let r=risks.find(x=>x.id==id)||{date:D(),thought:"",situation:"",trigger:"",intensity:0,response:"",consumption:"No tuve consumo",immediate:false};modal(`<h2>${id?"Editar":"Registrar"} situación de riesgo</h2><label>Fecha<input id="rd" type="date" value="${E(r.date)}"></label><label>Pensamiento<textarea id="rt">${E(r.thought)}</textarea></label><label>Situación<textarea id="rs">${E(r.situation)}</textarea></label><label>Disparador<input id="rg" value="${E(r.trigger)}"></label><label>Intensidad 0–10<input id="ri" type="number" min="0" max="10" value="${E(r.intensity)}"></label><label>Cómo la enfrenté<textarea id="rr">${E(r.response)}</textarea></label><label>Consumo<select id="rc"><option>No tuve consumo</option><option>Tuve consumo</option><option>No estoy seguro</option></select></label><label><input id="rim" type="checkbox" ${r.immediate?"checked":""}> Riesgo inmediato</label><div class="actions"><button class="primary" id="ok">Guardar</button><button onclick="close()">Cancelar</button></div>`);rc.value=r.consumption;document.getElementById("ok").onclick=()=>{let n={id:id||crypto.randomUUID(),date:rd.value,thought:rt.value,situation:rs.value,trigger:rg.value,intensity:Math.max(0,Math.min(10,Number(ri.value)||0)),response:rr.value,consumption:rc.value,immediate:rim.checked};let i=risks.findIndex(x=>x.id==id);i<0?risks.push(n):risks[i]=n;W("risks",risks);close();render()}}
+function addRoutine(id){let r=routine.find(x=>x.id==id)||{time:"08:00",title:"",notes:""};modal(`<h2>${id?"Editar":"Agregar"} actividad</h2><label>Hora<input id="rtime" type="time" value="${E(r.time)}"></label><label>Actividad<input id="rtitle" value="${E(r.title)}"></label><label>Notas<input id="rnotes" value="${E(r.notes)}"></label><div class="actions"><button class="primary" id="ok">Guardar</button><button onclick="close()">Cancelar</button></div>`);document.getElementById("ok").onclick=()=>{let n={id:id||crypto.randomUUID(),time:rtime.value,title:rtitle.value.trim(),notes:rnotes.value};if(!n.title)return alert("Escribe una actividad.");let i=routine.findIndex(x=>x.id==id);i<0?routine.push(n):routine[i]=n;W("routine",routine);close();render()}}
+function addEmergency(id){let e=emergency.find(x=>x.id==id)||{t:"",c:""};modal(`<h2>${id?"Editar":"Agregar"} recurso</h2><label>Título<input id="et" value="${E(e.t)}"></label><label>Contenido<textarea id="ec">${E(e.c)}</textarea></label><div class="actions"><button class="primary" id="ok">Guardar</button><button onclick="close()">Cancelar</button></div>`);document.getElementById("ok").onclick=()=>{let n={id:id||crypto.randomUUID(),t:et.value.trim(),c:ec.value.trim()};if(!n.t)return alert("Escribe un título.");let i=emergency.findIndex(x=>x.id==id);i<0?emergency.push(n):emergency[i]=n;W("emergency",emergency);close();render()}}
+function saveMood(){let date=document.getElementById("md").value||D(),m=mood(date);m.date=date;m.sleep=sleep.value;m.exercise=exercise.value;m.notes=notes.value;["racing","anguish","irritability","elevated","low","menstrual","psychosis","substances"].forEach(k=>m[k]=document.querySelector(`input[name=${k}]:checked`)?.value||"");let i=moods.findIndex(x=>x.date==date);i<0?moods.push(m):moods[i]=m;W("moods",moods);alert("Ficha guardada.");render()}
+function bind(){document.querySelectorAll("[data-action]").forEach(x=>x.onclick=()=>act(x.dataset.action));document.querySelectorAll("[data-act]").forEach(x=>x.onclick=()=>act(x.dataset.act));document.querySelectorAll("[data-he]").forEach(x=>x.onclick=()=>addHabit(x.dataset.he));document.querySelectorAll("[data-hx]").forEach(x=>x.onclick=()=>{habits=habits.filter(h=>h.id!=x.dataset.hx);W("habits",habits);render()});document.querySelectorAll("[data-ce]").forEach(x=>x.onclick=()=>addCommit(x.dataset.ce));document.querySelectorAll("[data-cx]").forEach(x=>x.onclick=()=>{commit=commit.filter(c=>c.id!=x.dataset.cx);W("commit",commit);render()});document.querySelectorAll("[data-cdone]").forEach(x=>x.onchange=()=>{let c=commit.find(c=>c.id==x.dataset.cdone);c.done=x.checked;W("commit",commit);render()});document.querySelectorAll("[data-re]").forEach(x=>x.onclick=()=>addRoutine(x.dataset.re));document.querySelectorAll("[data-rx]").forEach(x=>x.onclick=()=>{routine=routine.filter(r=>r.id!=x.dataset.rx);W("routine",routine);render()});document.querySelectorAll("[data-riske]").forEach(x=>x.onclick=()=>addRisk(x.dataset.riske));document.querySelectorAll("[data-riskx]").forEach(x=>x.onclick=()=>{risks=risks.filter(r=>r.id!=x.dataset.riskx);W("risks",risks);render()});document.querySelectorAll("[data-ee]").forEach(x=>x.onclick=()=>addEmergency(x.dataset.ee))}
+function act(a){if(a=="saveMood")return saveMood();if(a=="addHabit")return addHabit();if(a=="saveHabits"){let date=D();document.querySelectorAll("[data-hv]").forEach(x=>{let id=x.dataset.hv,l=hlogs.filter(z=>!(z.hid==id&&z.date==date));l.push({hid:id,date,value:Number(x.value)||0,done:document.querySelector(`[data-hd="${id}"]`).checked});hlogs=l});W("hlogs",hlogs);alert("Hábitos guardados.");return render()}if(a=="addCommit")return addCommit();if(a=="addRisk")return addRisk();if(a=="addRoutine")return addRoutine();if(a=="addEmergency")return addEmergency();if(a=="saveReminder"){reminder=document.getElementById("rem").value||"21:00";localStorage.setItem(K+"reminder",reminder);return alert("Recordatorio guardado.")}if(a=="notify"){if(!("Notification"in window))return alert("Este navegador no admite notificaciones.");Notification.requestPermission().then(p=>{if(p=="granted")new Notification("Recuperación",{body:"Notificaciones activadas."})});return}}
+function render(){let c=tab=="home"?home():tab=="mood"?moodView():tab=="habits"?habitsView():tab=="routine"?routineView():tab=="commitments"?commitmentsView():tab=="risk"?riskView():tab=="emergency"?emergencyView():analysisView();shell(c)}
+addEventListener("load",render);
 })();
