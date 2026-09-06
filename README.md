@@ -1,48 +1,33 @@
-# Mi Recuperación v2
+# Recuperación y Rutina Personal v3.0
 
-Versión estable y estática para GitHub Pages.
+Versión con Carta del Ánimo diaria y análisis mensual.
 
-## Por qué esta versión no queda en blanco
+## Carta del ánimo
+La pestaña **Completar mi ficha del ánimo** es diaria y replica la estructura funcional de la carta compartida:
+- Medicamentos
+- Dosis diaria
+- N.º de veces/tomas
+- Horas totales de sueño
+- Ejercicio
+- Pensamiento acelerado
+- Angustia/desesperación
+- Irritabilidad: Leve / Moderado / Marcado / Severo
+- Ánimo elevado: Leve / Moderado / Marcado / Severo / Estable
+- Ánimo bajo: Leve / Moderado / Marcado / Severo
+- Período menstrual
+- Psicosis
+- Alcohol / marihuana
 
-No depende de Vite, React ni de una carpeta `src/`. `index.html` carga directamente `styles.css`, `app.js` y `config.js`, por lo que GitHub Pages puede servirla como sitio estático.
+Cada indicador se completa mediante checklist/selector. El día actual queda destacado.
 
-## Funcionalidades
+## Análisis mensual
+La vista mensual conserva las columnas 1–31 y permite comparar la evolución diaria. Los indicadores se representan como marcas/checklist en la columna del día correspondiente.
 
-- Inicio con resumen diario.
-- Pestaña **Completar mi ficha del ánimo**.
-- Registro de ánimo 1–5.
-- Ansiedad 0–10.
-- Intensidad del deseo/impulso 0–10.
-- Pensamientos, situaciones influyentes y decisión saludable.
-- Hábitos diarios.
-- Historial de fichas.
-- Persistencia local en el teléfono.
-- Preparada para sincronización con Supabase.
-- PWA instalable cuando el navegador lo permita.
+## Horario
+Permite crear, editar y eliminar actividades y asignarles una hora.
 
-## Publicar desde el teléfono
-
-1. Abre tu repositorio `P-Renault/Recuperacion`.
-2. Reemplaza los archivos del repositorio con los contenidos de este ZIP.
-3. En GitHub entra a **Settings → Pages**.
-4. En **Build and deployment**, selecciona `Deploy from a branch`.
-5. Selecciona `main` y carpeta `/ (root)`.
-6. Guarda.
-7. Espera la publicación y abre nuevamente tu sitio.
+## Publicación
+GitHub → Settings → Pages → Source → GitHub Actions.
 
 ## Supabase
-
-1. Abre Supabase → SQL Editor.
-2. Ejecuta `supabase.sql`.
-3. Ve a Project Settings → API.
-4. Copia **Project URL** y la clave pública **anon**.
-5. Abre `config.js` y coloca:
-
-window.SUPABASE_CONFIG = {
-  url: "https://TU-PROYECTO.supabase.co",
-  anonKey: "TU_CLAVE_ANON"
-};
-
-No uses jamás la clave `service_role` en `config.js`.
-
-La aplicación funciona aunque Supabase no esté configurado: guarda localmente en el navegador.
+Ejecutar `supabase.sql` en SQL Editor.
