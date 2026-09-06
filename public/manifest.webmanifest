@@ -1,0 +1,11 @@
+{
+  "name": "Recuperación y Rutina Personal",
+  "short_name": "Recuperación",
+  "start_url": "/Recuperacion/",
+  "scope": "/Recuperacion/",
+  "display": "standalone",
+  "background_color": "#f4f6f8",
+  "theme_color": "#16232c",
+  "lang": "es-CL",
+  "description": "Rutinas, ficha diaria del ánimo y evolución mensual."
+}
