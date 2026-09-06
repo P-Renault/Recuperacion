@@ -9,3 +9,10 @@ Para GitHub Pages, subir el contenido de esta carpeta a la raíz del repositorio
 
 ## Corrección v5.1
 Se reincorpora **MEDICAMENTOS** a la Carta del Ánimo diaria como checklist (Sí / No / Parcial / olvidé alguna dosis / Sin registro), se muestra en el resumen del día y se incluye en el análisis mensual.
+
+
+## Versión 5.2
+- Medicamentos: **nombre, dosis diaria y cantidad diaria**.
+- Edición, eliminación y registro de toma.
+- Checklist táctil corregido: la selección se aplica y se resalta inmediatamente.
+- Mantiene las funcionalidades de ánimo, hábitos, horario, compromisos, riesgos, kit y análisis.
