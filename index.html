@@ -1,15 +1,105 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#16232c" />
-  <meta name="description" content="Recuperación y Rutina Personal" />
-  <link rel="manifest" href="/Recuperacion/manifest.webmanifest" />
-  <title>Recuperación y Rutina</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0f172a">
+  <title>Mi Recuperación</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div id="root"></div>
-  <script type="module" src="/src/main.ts"></script>
+  <div id="app">
+    <header class="topbar">
+      <div>
+        <span class="eyebrow">RECUPERACIÓN</span>
+        <h1>Mi Recuperación</h1>
+      </div>
+      <button id="installBtn" class="icon-btn" hidden aria-label="Instalar aplicación">＋</button>
+    </header>
+
+    <main>
+      <section id="tab-inicio" class="tab-panel active">
+        <div class="hero card">
+          <span class="pill">HOY · <span id="todayLabel"></span></span>
+          <h2>Un día a la vez.</h2>
+          <p>Registra cómo estás, cumple tus hábitos y vuelve a tu plan cuando lo necesites.</p>
+          <button class="primary" data-go="animo">Completar mi ficha del ánimo</button>
+        </div>
+        <div class="grid-2">
+          <div class="metric card"><span>Estado de ánimo</span><strong id="moodSummary">Sin registrar</strong></div>
+          <div class="metric card"><span>Hábitos de hoy</span><strong id="habitSummary">0 / 0</strong></div>
+        </div>
+        <div class="card">
+          <h3>Recordatorio de hoy</h3>
+          <p class="quote">“No necesito resolver toda mi vida hoy. Solo necesito tomar buenas decisiones en este día.”</p>
+        </div>
+      </section>
+
+      <section id="tab-animo" class="tab-panel">
+        <div class="section-title">
+          <div><span class="eyebrow">AUTOOBSERVACIÓN</span><h2>Completar mi ficha del ánimo</h2></div>
+        </div>
+        <form id="moodForm" class="card form">
+          <label>¿Cómo me siento ahora?
+            <select id="mood" required>
+              <option value="">Selecciona</option>
+              <option value="1">1 · Muy mal</option>
+              <option value="2">2 · Mal</option>
+              <option value="3">3 · Regular</option>
+              <option value="4">4 · Bien</option>
+              <option value="5">5 · Muy bien</option>
+            </select>
+          </label>
+          <label>Nivel de ansiedad <span class="range-value" id="anxietyValue">5</span>
+            <input id="anxiety" type="range" min="0" max="10" value="5">
+          </label>
+          <label>Intensidad del deseo/impulso de consumir <span class="range-value" id="cravingValue">0</span>
+            <input id="craving" type="range" min="0" max="10" value="0">
+          </label>
+          <label>¿Qué estoy sintiendo o pensando?
+            <textarea id="thoughts" rows="4" placeholder="Escribe sin juzgarte..."></textarea>
+          </label>
+          <label>¿Qué situación está influyendo hoy?
+            <input id="trigger" placeholder="Ej.: estrés, soledad, discusión, cansancio...">
+          </label>
+          <label>¿Qué decisión saludable tomaré ahora?
+            <textarea id="healthyAction" rows="3" placeholder="Ej.: llamar a alguien, salir a caminar, descansar..."></textarea>
+          </label>
+          <button class="primary" type="submit">Guardar ficha de hoy</button>
+          <p id="moodStatus" class="status"></p>
+        </form>
+      </section>
+
+      <section id="tab-habitos" class="tab-panel">
+        <div class="section-title">
+          <div><span class="eyebrow">CONSTANCIA</span><h2>Hábitos de hoy</h2></div>
+        </div>
+        <div class="card">
+          <form id="habitForm" class="inline-form">
+            <input id="habitName" required placeholder="Nuevo hábito...">
+            <button class="primary" type="submit">Agregar</button>
+          </form>
+        </div>
+        <div id="habitList" class="list"></div>
+      </section>
+
+      <section id="tab-historial" class="tab-panel">
+        <div class="section-title">
+          <div><span class="eyebrow">REGISTRO</span><h2>Historial</h2></div>
+        </div>
+        <div id="historyList" class="list"></div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Navegación">
+      <button class="nav-btn active" data-tab="inicio">⌂<span>Inicio</span></button>
+      <button class="nav-btn" data-tab="animo">♥<span>Mi ánimo</span></button>
+      <button class="nav-btn" data-tab="habitos">✓<span>Hábitos</span></button>
+      <button class="nav-btn" data-tab="historial">▤<span>Historial</span></button>
+    </nav>
+  </div>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

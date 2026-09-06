@@ -1,29 +1,48 @@
-# Recuperación y Rutina Personal — v2.0
+# Mi Recuperación v2
 
-Nueva versión para GitHub Pages + Supabase.
+Versión estable y estática para GitHub Pages.
 
-## Funciones
-- Pestaña **Completar mi ficha del ánimo** para registrar el estado del día.
-- Ficha diaria basada en las filas de la carta del ánimo.
-- Historial y análisis mensual para comparar evolución.
-- Horario diario editable: crear, editar, eliminar y ordenar actividades por hora.
-- Recordatorio diario de la ficha del ánimo con notificación del navegador.
-- Funciona con Supabase cuando se configuran las variables de entorno.
-- Tiene respaldo local en el navegador para que la interfaz siga funcionando sin Supabase.
-- PWA instalable en Android.
+## Por qué esta versión no queda en blanco
 
-## Publicación en GitHub Pages
-El workflow de `.github/workflows/deploy.yml` compila con Vite y publica `dist/`.
+No depende de Vite, React ni de una carpeta `src/`. `index.html` carga directamente `styles.css`, `app.js` y `config.js`, por lo que GitHub Pages puede servirla como sitio estático.
 
-En GitHub:
-Settings → Pages → Source → GitHub Actions.
+## Funcionalidades
+
+- Inicio con resumen diario.
+- Pestaña **Completar mi ficha del ánimo**.
+- Registro de ánimo 1–5.
+- Ansiedad 0–10.
+- Intensidad del deseo/impulso 0–10.
+- Pensamientos, situaciones influyentes y decisión saludable.
+- Hábitos diarios.
+- Historial de fichas.
+- Persistencia local en el teléfono.
+- Preparada para sincronización con Supabase.
+- PWA instalable cuando el navegador lo permita.
+
+## Publicar desde el teléfono
+
+1. Abre tu repositorio `P-Renault/Recuperacion`.
+2. Reemplaza los archivos del repositorio con los contenidos de este ZIP.
+3. En GitHub entra a **Settings → Pages**.
+4. En **Build and deployment**, selecciona `Deploy from a branch`.
+5. Selecciona `main` y carpeta `/ (root)`.
+6. Guarda.
+7. Espera la publicación y abre nuevamente tu sitio.
 
 ## Supabase
-Ejecuta `supabase.sql` en el SQL Editor. Después configura:
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY`
 
-Para GitHub Actions, esas variables deben existir como Secrets/Variables del repositorio.
+1. Abre Supabase → SQL Editor.
+2. Ejecuta `supabase.sql`.
+3. Ve a Project Settings → API.
+4. Copia **Project URL** y la clave pública **anon**.
+5. Abre `config.js` y coloca:
 
-## Importante sobre las notificaciones
-El navegador debe conceder permiso para notificaciones. En GitHub Pages una web estática no puede garantizar una alarma del sistema cuando el navegador está completamente cerrado. Esta versión programa el recordatorio local mientras la PWA está activa y permite configurar la hora. Para notificaciones push garantizadas con la app cerrada se necesita un servicio push/backend adicional.
+window.SUPABASE_CONFIG = {
+  url: "https://TU-PROYECTO.supabase.co",
+  anonKey: "TU_CLAVE_ANON"
+};
+
+No uses jamás la clave `service_role` en `config.js`.
+
+La aplicación funciona aunque Supabase no esté configurado: guarda localmente en el navegador.
