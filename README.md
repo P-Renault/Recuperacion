@@ -1,18 +1,34 @@
-# Recuperación v5
+# Recuperación v5.4 — Supabase
 
-Nueva versión 5.1 con resumen diario, hábitos editables, compromisos personales, pensamientos/situaciones de riesgo, estado de consumo, kit de emergencias, carta del ánimo, horario y análisis mensual.
+Aplicación PWA para GitHub Pages con almacenamiento local + sincronización opcional con Supabase.
 
-La interfaz es estática y está preparada para GitHub Pages. Los datos se guardan localmente para que la aplicación funcione sin una configuración adicional. `supabase_v5.sql` crea las tablas nuevas para sincronización posterior.
+## v5.4
+- Mantiene todas las funciones de v5.3.
+- Agrega **Cuenta / Supabase**.
+- Configuración mediante URL del proyecto + clave pública `anon`.
+- Registro e inicio de sesión con Supabase Auth.
+- Subir datos locales a Supabase.
+- Descargar datos de Supabase al teléfono.
+- Mantiene localStorage como respaldo local.
+- Horario con hora de inicio y hora de fin.
+- Medicamentos: nombre, dosis diaria y cantidad diaria.
 
-Para GitHub Pages, subir el contenido de esta carpeta a la raíz del repositorio `P-Renault/Recuperacion`.
+## Seguridad
+Usa únicamente la clave pública `anon`. **Nunca** introduzcas una clave `service_role` en la aplicación.
 
+## GitHub Pages
+Sube el contenido de esta carpeta a la raíz del repositorio `P-Renault/Recuperacion`.
+La URL esperada es `https://p-renault.github.io/Recuperacion/`.
 
-## Corrección v5.1
-Se reincorpora **MEDICAMENTOS** a la Carta del Ánimo diaria como checklist (Sí / No / Parcial / olvidé alguna dosis / Sin registro), se muestra en el resumen del día y se incluye en el análisis mensual.
+## Configuración
+1. Abre la aplicación.
+2. Entra a **Cuenta / Supabase**.
+3. Introduce la URL del proyecto Supabase.
+4. Introduce la clave pública `anon`.
+5. Guarda y prueba la conexión.
+6. Crea una cuenta o inicia sesión.
+7. Usa **Subir datos locales** para enviar los registros del teléfono a Supabase.
+8. En otro dispositivo, inicia sesión y usa **Descargar datos de Supabase**.
 
-
-## Versión 5.2
-- Medicamentos: **nombre, dosis diaria y cantidad diaria**.
-- Edición, eliminación y registro de toma.
-- Checklist táctil corregido: la selección se aplica y se resalta inmediatamente.
-- Mantiene las funcionalidades de ánimo, hábitos, horario, compromisos, riesgos, kit y análisis.
+## Notas
+Las notificaciones del navegador dependen de los permisos y del sistema operativo; GitHub Pages por sí solo no garantiza alarmas si el navegador es terminado completamente.
