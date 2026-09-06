@@ -1,0 +1,10 @@
+{
+  "name":"Recuperación y Rutina Personal",
+  "short_name":"Recuperación",
+  "start_url":"/Recuperacion/",
+  "scope":"/Recuperacion/",
+  "display":"standalone",
+  "background_color":"#f3f6f8",
+  "theme_color":"#17262f",
+  "lang":"es-CL"
+}
