@@ -1,0 +1,55 @@
+/* RECUPERACIÓN — corrección final del formulario Supabase en móvil */
+
+.card > label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.card > label input,
+.card > label textarea,
+.card > label select {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #ccd6da;
+  border-radius: 9px;
+  padding: 9px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 700px) {
+  .card {
+    overflow: hidden;
+  }
+
+  .card .head {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .card .head > label {
+    width: 100%;
+  }
+
+  .card .head > label input {
+    width: 100%;
+  }
+
+  .card > label {
+    width: 100%;
+  }
+
+  .card > label input,
+  .card > label textarea,
+  .card > label select {
+    width: 100%;
+  }
+}
