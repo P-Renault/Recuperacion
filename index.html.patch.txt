@@ -1,0 +1,7 @@
+En index.html, antes de cargar app.js, agrega config.js:
+
+<script src="./config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./app.js" defer></script>
+
+El orden es obligatorio: config.js -> Supabase CDN -> app.js.
